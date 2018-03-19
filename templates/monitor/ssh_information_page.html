@@ -1,0 +1,278 @@
+{% extends 'base.html' %}
+{% block title %}{{ alias }}{% endblock %}
+{% load static %}
+{% block right_nav %}
+    <a class="navbar-brand" style="color:white;  font-family: 'Trocchi', serif; font-weight: normal;"></a>
+{% endblock %}
+{% block body %}
+    <style>
+        th {
+            background-color: #0171c5;
+            color: white;
+        }
+    .loading {
+        background-color: #ffffff;
+        background-image: url("http://loadinggif.com/images/image-selection/3.gif");
+        background-size: 105px 105px;
+        background-position: center;
+        background-repeat: no-repeat;
+    }
+    </style>
+    <link href="{% static 'js/jsoneditor.css' %}" type="text/css" rel="stylesheet"/>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+
+    <div class="row" style="padding-bottom: 50px; padding-top: 50px">
+        <div class="col-sm-4" style="border-right: solid thin gray">
+            <div class="container-fluid" style="width: 100%">
+                <p><b>Run a specific command in linux and get a live response.</b></p>
+                <label class="sr-only" for="inlineFormInputGroup">Username</label>
+                <div class="input-group mb-2 mr-sm-2 mb-sm-0">
+                    <div class="input-group-addon">~#</div>
+                    <input type="text" class="form-control" id="cmd"
+                           style="background-color: black; color: white" placeholder="_">
+                </div>
+                <button class="btn btn-danger btn-sm" name="run" id="run" onclick="run_cmd('#cmd')">Run command</button>
+                <hr>
+                <textarea id="console" title="console" class="form-control" readonly
+                          style="background-color: black; color: white; height: 450px"></textarea>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <h4 align="center">Remote Connection through SSH: {{ alias }} </h4>
+            {% if ssh_information %}
+                {% if "Error"  not in ssh_information %}
+                    <style>
+                        #legend {
+                            display: inline;
+                            margin-left: 30px;
+                        }
+
+                        #legend h2 {
+                            display: inline;
+                            font-size: 18px;
+                            margin-right: 20px;
+                        }
+
+                        #legend a {
+                            color: white;
+                            margin-right: 20px;
+                        }
+
+                        #legend span {
+                            padding: 2px 4px;
+                            -webkit-border-radius: 5px;
+                            -moz-border-radius: 5px;
+                            border-radius: 5px;
+                            color: white;
+                            font-weight: bold;
+                            text-shadow: 1px 1px 1px black;
+                            background-color: black;
+                        }
+
+                        .custom_span {
+                            padding: 2px 4px;
+                            -webkit-border-radius: 5px;
+                            -moz-border-radius: 5px;
+                            border-radius: 5px;
+                            font-weight: bold;
+                            text-shadow: 1px 1px 1px black;
+                        }
+
+                        #legend .string {
+                            background-color: #009408;
+                        }
+
+                        #legend .array {
+                            background-color: #2D5B89;
+                        }
+
+                        #legend .object {
+                            background-color: #E17000;
+                        }
+
+                        #legend .number {
+                            background-color: #497B8D;
+                        }
+
+                        #legend .boolean {
+                            background-color: #B1C639;
+                        }
+
+                        #legend .null {
+                            background-color: #B1C639;
+                        }
+                    </style>
+                    <hr>
+                    <div id="legend">
+                        <span class="array">array</span>
+                        <span class="object">object</span>
+                        <span class="string">string</span>
+                        <span class="number">number</span>
+                        <span class="boolean">boolean</span>
+                    </div>
+                    <hr>
+                    <div style="margin-left: 30px">
+                        <button class="btn btn-sm btn-success custom_span" id="expander">Expand all</button>
+                        <form action="{% url 'monitor:download_stats' %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="alias_json" value="{{ alias }}">
+                            <input type="hidden" name="pseudo_buffer_json" value="{{ ssh_information|safe }}">
+                            <button class="btn btn-sm btn-primary custom_span" name="download" value="json">Download JSON</button>
+                            <button class="btn btn-sm btn-warning custom_span" name="download" value="xml">Download XML</button>
+                        </form>
+                    </div>
+
+                    <div id="editor" class="json-editor"></div>
+                    <textarea id="json" class="form-control" style="height: 200px" readonly></textarea>
+                    <script src="{% static 'js/json2.js' %}"></script>
+                    <script src="{% static 'js/jquery.jsoneditor.js' %}"></script>
+                    <script>
+                        function sortObject(object) {
+                            var sortedObj = {},
+                                keys = Object.keys(object);
+
+                            keys.sort(function (key1, key2) {
+                                key1 = key1.toLowerCase(), key2 = key2.toLowerCase();
+                                if (key1 < key2) return -1;
+                                if (key1 > key2) return 1;
+                                return 0;
+                            });
+
+                            for (var index in keys) {
+                                var key = keys[index];
+                                if (typeof object[key] == 'object' && !(object[key] instanceof Array)) {
+                                    sortedObj[key] = sortObject(object[key]);
+                                } else {
+                                    sortedObj[key] = object[key];
+                                }
+                            }
+
+                            return sortedObj;
+                        }
+                        var json1 = {{ ssh_information|safe }};
+                        var json = sortObject(json1);
+
+
+                        function printJSON() {
+                            $('#json').val(JSON.stringify(json));
+                        }
+
+                        function updateJSON(data) {
+                            json = data;
+                            printJSON();
+                        }
+
+                        function showPath(path) {
+                            $('#path').text(path);
+                        }
+
+                        $(document).ready(function () {
+
+                            $('#expander').click(function () {
+                                var editor = $('#editor');
+                                editor.toggleClass('expanded');
+                                $(this).text(editor.hasClass('expanded') ? 'Collapse' : 'Expand all');
+                            });
+                            printJSON();
+                            $('#editor').jsonEditor(json, {change: updateJSON, propertyclick: showPath});
+                            $('.property').prop('readonly', true);
+                            $('.value').prop('readonly', true);
+                        });
+                    </script>
+                {% else %}
+                    <h2>{{ ssh_information }}</h2>
+                {% endif %}
+            {% else %}
+                <h2>ERROR RETRIEVING DATA PLEASE DEBUG</h2>
+            {% endif %}
+            {% comment %}<div class="container-fluid" style="width: 75%" align="center">
+                {% if ssh_information %}
+                    <br><br>
+                    {% if "Error"  not in ssh_information %}
+                        {% for key1,value1 in ssh_information.items %}
+                            <div id="accordion" role="tablist" aria-multiselectable="true">
+                                <div class="card">
+                                    <div class="card-header" role="tab" id="heading_{{ key1 }}">
+                                        <h5 class="mb-0">
+                                            <a data-toggle="collapse" data-parent="#accordion"
+                                               href="#collapse_{{ key1 }}"
+                                               aria-expanded="true"
+                                               aria-controls="collapse_{{ key1 }}">{{ key1 }}
+                                            </a>
+                                        </h5>
+                                    </div>
+                                    <div id="collapse_{{ key1 }}" class="collapse" role="tabpanel"
+                                         aria-labelledby="heading_{{ key1 }}">
+                                        <div class="card-block">
+                                            <table class="table table-condensed">
+
+                                                {% for key2,value2 in value1.items %}
+                                                    <tr>
+                                                        {% if value2.items|length == 0 %}
+                                                            <td style="width: 200px">{{ key2 }}</td>
+                                                            <td>{{ value2 }}</td>
+                                                        {% else %}
+                                                            <th style="width: 200px">{{ key2 }}</th>
+                                                            <th>Key</th>
+                                                            <th>Value</th>
+                                                            {% for key3,value3 in value2.items %}
+                                                                <tr>
+                                                                    <td style="width: 200px"> -</td>
+                                                                    <td>{{ key3 }}</td>
+                                                                    <td>{{ value3 }}</td>
+                                                                </tr>
+                                                            {% endfor %}
+
+                                                        {% endif %}
+                                                    </tr>
+                                                {% endfor %}
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <h2>{{ ssh_information }}</h2>
+                    {% endif %}
+                {% else %}
+                    <h2>ERROR RETRIEVING DATA PLEASE DEBUG</h2>
+                {% endif %}
+            </div>
+            {% endcomment %}
+        </div>
+    </div>
+
+    <script>
+        function run_cmd(id) {
+            var value = $(id).val();
+            var value_console = $('#console').val();
+
+
+            $.ajax({
+                url: "{% url 'monitor:ssh_command' %}",
+                data: {
+                    "pk": {{ pk }},
+                    "command": value
+                },
+                dataType: 'json',
+                beforeSend: function () {
+                    $('#console').val(value_console + "[" + '{{ alias }}' + "@localhost ~]#: " + value + '\n');
+                     $("#console").addClass("loading");
+                     $("#run").attr('disabled','disabled');
+                },
+                success: function (data) {
+                    $('#console').val(value_console + "[" + '{{ alias }}' + "@localhost ~]#: " + value + '\n' + "" + data.stdout + '\n');
+                    var $textarea = $('#console');
+                    $textarea.scrollTop($textarea[0].scrollHeight);
+                    $("#console").removeClass("loading");
+                    $("#run").removeAttr('disabled');
+                },
+                error: function (xhr) {
+                    alert(xhr.responseText);
+                    $("#console").removeClass("loading");
+                }
+            })
+        }
+    </script>
+{% endblock %}

@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}Stats{% endblock %}
+{% load static %}
+{% block right_nav %}
+    <a class="navbar-brand" style="color:white;  font-family: 'Trocchi', serif; font-weight: normal;"></a>
+{% endblock %}
+{% block body %}
+    <div class="row">
+        <div class="col-sm-12">
+            <br>
+            <h2 align="center" style="color: #2D5B89; font-family: 'Trebuchet MS', sans-serif" >Configuration Checker</h2>
+            <div class="container-fluid">
+            <button class="btn btn-sm btn-primary" data-toggle="collapse" data-target="#new_connection">Create New Connection</button>
+            </div>
+            <div id="new_connection" class="container-fluid collapse" align="center" style="padding-top: 20px">
+                <form method="post">
+                    <div class="form-inline">
+                        {% csrf_token %}
+                        <input type="text" id="alias" name="alias" placeholder="Connection alias">
+                        <input type="text" id="user" name="user" placeholder="Username">
+                        <input type="password" id="pwd" name="pwd" placeholder="Password">
+                        <input type="text" id="ip" name="ip" placeholder="Host">
+                        <input type="number" id="port" name="port" value="22" placeholder="Port">
+                    </div>
+                    <br>
+                    <button class="btn btn-success btn-sm" name="save">Save connection</button>
+                </form>
+            </div>
+            <hr>
+        </div>
+    </div>
+    {% if Connections|length > 0 %}
+        <script type="text/javascript" src="{% static 'js/charts/loader.js' %}"></script>
+        <style>
+            .columnTitle {
+                font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+                font-size: 14px;
+                color: white;
+                background-color: #0171c5;
+            }
+        </style>
+        <script type="text/javascript">
+            google.charts.load('current', {'packages': ['table']});
+            google.charts.setOnLoadCallback(drawTable);
+
+            function drawTable() {
+                var data = new google.visualization.DataTable();
+
+                data.addColumn('string', '');
+                data.addColumn('string', 'Connection name');
+                data.addColumn('string', 'Username');
+                data.addColumn('string', 'Host');
+                data.addColumn('string', 'Port');
+                data.addRows([
+                    {% for connection in Connections %}
+                        ['<a href="{% url 'monitor:ssh_information' connection.id %}" class="btn btn-primary btn-sm"role="button" onClick="loading();">Connect</a>&nbsp;&nbsp;<button type="edit" class="btn btn-warning btn-sm" data-toggle="modal" data-target="#edit_remove_modal" onClick="get_info({{ connection.id }})"><i class="fa fa-pencil" style="color: black"></i></button>&nbsp;&nbsp;<button type="test" class="btn btn-success btn-sm" data-toggle="modal" data-target="#test_modal" onClick="test_connection({{ connection.id }})">Test</button>',
+                            '{{ connection.alias }}', '{{ connection.username }}', '{{ connection.ip }}', '{{ connection.port }}'
+                        ],
+                    {% endfor %}]);
+
+                data.setProperty(1, 0, 'style', 'width:180px');
+
+                var table = new google.visualization.Table(document.getElementById('table_div'));
+                table.draw(data,
+                    {
+                        showRowNumber: true,
+                        allowHtml: true,
+                        width: "100%",
+                        cssClassNames: {headerRow: 'columnTitle'},
+                        height: '70%',
+                        page: 'enable',
+                        pageSize: 20,
+                        pagingSymbols: {
+                            prev: 'prev',
+                            next: 'next'
+                        },
+                        pagingButtonsConfiguration: 'auto'
+
+                    });
+                var tablex = document.getElementsByClassName("google-visualization-table-table");
+                var element = tablex[0].firstElementChild.firstElementChild.children;
+                for (var i = 0; element.length > i; i++) {
+                    element[i].className = "google-visualization-table-th google-visualization-table-type-number unsorted";
+                    element[i].style = "background-color:#0171c5";
+                }
+            }
+        </script>
+
+        {% include 'monitor/modal/edit_remove_ssh_view.html' %}
+        {% include 'monitor/modal/test_alert_view.html' %}
+        <div class="container-fluid" style="padding-bottom: 50px; padding-top: 20px" id="connect_div">
+            <div id="table_div"></div>
+        </div>
+
+    {% else %}
+        <h2>Not connections added</h2>
+    {% endif %}
+
+
+    <script>
+        function loading() {
+            $body = $("body");
+            $body.addClass("loading");
+        }
+    </script>
+
+    <div class="modal"></div>
+{% endblock %}

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>
+        {% block title %}
+        {% endblock %}</title>
+    {% load staticfiles %}
+    <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+    <script src="{% static 'js/jquery-3.1.1.js' %}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js"
+            integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb"
+            crossorigin="anonymous"></script>
+    <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+    <link rel="shortcut icon"
+          href="http://l91e8207rq330k0zf1bpix91bh1.wpengine.netdna-cdn.com/wp-content/uploads/2015/01/2000px-Intel-logo.svg_-1024x678.png">
+    <link rel="stylesheet" href="{% static 'assets/css/font-awesome.min.css' %}">
+</head>
+<style>
+    /* When the body has the loading class, we turn
+       the scrollbar off with overflow:hidden */
+    body.loading {
+        overflow: hidden;
+    }
+
+    /* Anytime the body has the loading class, our
+       modal element will be visible */
+    body.loading .modal {
+        display: block;
+        position: fixed;
+        z-index: 1000;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 100%;
+        background: rgba(255, 255, 255, .8) url('http://sampsonresume.com/labs/pIkfp.gif') 50% 50% no-repeat;
+    }
+</style>
+<body>
+
+<nav class="navbar navbar-toggleable-md navbar-light fixed-top bg-faded" style="background-color: #0071c5;"
+     id="nav_bar_id">
+
+    <div class="collapse navbar-collapse" id="navbarNavDropdown">
+        <ul class="navbar-nav">
+            <li class="nav nav-item" style="padding-right: 15px; padding-top: 5px">
+                <a href="{% url 'monitor:main_base' %}" style="background-color: #0171c5; color: white" title="Home"><i
+                        class="fa fa-home fa-2x" aria-hidden="true"></i></a>
+            </li>
+            {% block initial_nav %}
+
+
+            {% endblock %}
+
+        </ul>
+    </div>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+
+        <ul class="navbar-nav mr-auto">
+
+            {% block nav_bar %}
+
+            {% endblock %}
+        </ul>
+
+
+        {% block right_nav %}
+
+        {% endblock %}
+    {% comment %}
+        {% if request.user.is_authenticated or user.is_authenticated %}
+            <form class="form-inline my-2 my-lg-0">
+                {% csrf_token %}
+                <a href="#" style="color: white" class="btn btn-danger my-2 my-sm-0" role="button" data-toggle="modal"
+                   data-target="#support-modal">Tickets</a>
+            </form> &nbsp
+            <form action="#" method="post" class="form-inline my-2 my-lg-0">
+                {% csrf_token %}
+                <button class="btn btn-secondary my-2 my-sm-0" type="submit">Logout</button>
+            </form>
+        {% else %}
+            <form id="login-form" action="#" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success my-2 my-sm-0">Login</button>
+            </form>
+        {% endif %}
+        {% endcomment %}
+
+    </div>
+
+</nav>
+<!-- Page Content -->
+<div id="main_div">
+    {% if messages %}
+        {% block messages %}
+            <div class="container-fluid" align="center">
+                <div class="{{ messages.tag }}" id="div_msg" align="center"
+                     role="alert"> {{ messages.message }}  </div>
+            </div>
+        {% endblock %}
+    {% endif %}
+
+    <div class="container-fluid" style="padding-top: 50px">
+        {% block body %}
+
+        {% endblock %}
+    </div>
+</div>
+<nav class="navbar fixed-bottom navbar-light bg-faded" style="background-color: #0175bc">
+    <div class="container" align="center">
+        <span style="color: white;"> © 2017 - Site Built By Intel DEGPV GDL.  Performed with Django 1.11.7 </span>
+    </div>
+</nav>
+<script type="text/javascript">
+    setTimeout(function () {
+        try {
+            $('#div_msg').fadeOut('fast');
+        } catch (err) {
+            //
+        }
+    }, 5000);
+</script>
+</body>
+</html>

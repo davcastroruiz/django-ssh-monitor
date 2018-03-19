@@ -1,0 +1,89 @@
+<!-- Modal -->
+<div class="modal fade" tabindex="-1" role="dialog" id="edit_remove_modal" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-title">Connection</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="post" action="{% url 'monitor:remove_update' %}">
+                <div class="modal-body">
+                    <div class="form-group">
+                        {% csrf_token %}
+                        <input type="text" class="form-control" id="alias_edit" name="alias_edit"
+                               placeholder="Connection alias">
+                        <input type="text" class="form-control" id="user_edit" name="user_edit" placeholder="Username">
+                        <input type="password" class="form-control" id="pwd_edit" name="pwd_edit"
+                               placeholder="Password">
+                        <input type="text" class="form-control" id="ip_edit" name="ip_edit" placeholder="Host">
+                        <input type="number" class="form-control" id="port_edit" name="port_edit" value="22"
+                               placeholder="Port">
+                    </div>
+                    <input type="hidden" id="pk_edit" name="pk_edit">
+
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-danger btn-sm" name="action" value="remove">Remove</button>
+                    <button type="submit" class="btn btn-primary btn-sm" name="action" value="update">Save changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+<script>
+    function get_info(id) {
+        $.ajax({
+            url: "{% url 'monitor:get_info' %}",
+            data: {
+                "pk": id
+            },
+            dataType: 'json',
+            success: function (data) {
+                $("#modal-title").text("Connection " + data.alias);
+                $("#alias_edit").val(data.alias);
+                $("#user_edit").val(data.username);
+                $("#pwd_edit").val(data.password);
+                $("#ip_edit").val(data.hostname);
+                $("#port_edit").val(data.port);
+                $("#pk_edit").val(data.id);
+            }
+        })
+    }
+
+    function test_connection(id) {
+        var test_body = $('#test_body');
+        $.ajax({
+            url: "{% url 'monitor:test_connection' %}",
+            data: {
+                "pk": id
+            },
+            dataType: 'json',
+            beforeSend: function () {
+                $body = $("body");
+                $body.addClass("loading");
+            },
+            success: function (data) {
+                $body = $("body");
+                $body.removeClass("loading");
+                var result = data.result;
+                connection_result(result);
+                if (result != "successful") {
+                    test_body.html("<p>" + data.description + "</p>")
+                } else {
+                    test_body.html("");
+                }
+            },
+            error: function (data) {
+                $body = $("body");
+                $body.removeClass("loading");
+                connection_result("error");
+                test_body.html("");
+            }
+        })
+    }
+</script>

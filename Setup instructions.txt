@@ -1,0 +1,39 @@
+*********Python and pip needs to be separately copied and installed.*******
+Python 2.7
+On Debian derivatives such as Ubuntu, use APT:
+$ sudo apt-get install python 2.7
+
+On Red Hat and derivatives, use yum:
+$ sudo yum install python 2.7
+
+On SUSE and derivatives, use zypper:
+$ sudo zypper install python 2.7
+
+else use the official page of python to download 2.7.x.
+
+
+Pip (latest)
+https://pip.pypa.io/en/latest/installing/#install-pip
+______________
+Ubuntu / Debian:
+sudo apt-get install gcc python-dev python-pip
+______________
+RedHat / CentOS:
+sudo yum install gcc python-devel python-pip
+
+--- psutil need to be installed separately
+* run as root: pip install psutil
+
+
+* unzip wheelhouse folder
+* run:    pip install wheelhouse/*   
+	 - Install all packages from the wheelhouse folder.
+
+After this initial steps run in the terminal the next command:
+(linux run as root):
+	- python manage.py runserver
+A new instance will be created, to access to the information just use a browser and write:
+localhost:8000
+
+More about pip wheel:
+	- https://pip.pypa.io/en/stable/reference/pip_wheel/
